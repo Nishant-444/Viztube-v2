@@ -19,7 +19,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
   }
 
   const videoFilePath = req.files?.videoFile?.[0]?.path;
-  const thumbnailPath = req.files?.thumbnail?.[0]?.path;
+  const thumbnailPath = req.files?.thumbnailFile?.[0]?.path;
 
   if (!videoFilePath) {
     throw new ApiError(400, 'Video is required');
@@ -87,6 +87,15 @@ const getVideoById = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Video not found');
   }
 
+  if (req.user) {
+    User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { watchHistory: videoId },
+    }).exec();
+  }
+
+  video.views += 1;
+  await video.save({ validateBeforeSave: false });
+
   return res
     .status(200)
     .json(new ApiResponse(200, video, 'Video fetched successfully'));
@@ -113,6 +122,7 @@ const updateVideo = asyncHandler(async (req, res) => {
   }
 
   if (video.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, 'You are not authorized to update this video');
   }
 
   let thumbnailUploadResponse;
@@ -168,7 +178,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Video not found');
   }
 
-  if (video.owner.toString() !== req.user._id) {
+  if (video.owner.toString() !== req.user._id.toString()) {
     throw new ApiError(403, 'You are not authorized to delete this video');
   }
 
