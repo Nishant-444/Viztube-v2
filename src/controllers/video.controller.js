@@ -226,7 +226,7 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
 });
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+  const { query, sortBy, sortType, userId } = req.query;
 
   const pipeline = [];
   const matchStage = {};
